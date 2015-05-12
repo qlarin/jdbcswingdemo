@@ -8,11 +8,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import jdbc.swing.domain.Player;
+import jdbc.swing.domain.User;
+import jdbc.swing.domain.AuditHistory;
 
 public class PlayerDAO {
 
@@ -51,8 +54,60 @@ public class PlayerDAO {
 			close(stmt, rs);
 		}
 	}
+	
+	public List<User> getUsers() throws Exception {
+		List<User> list = new ArrayList<User>();
+		Statement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery("select * from users order by last_name");
+			
+			while(rs.next()){
+				User newUser = convertRowToUser(rs);
+				list.add(newUser);
+			}
+			return list;
+		}finally{
+			close(stmt, rs);
+		}
+	}
+	
+	public List<AuditHistory> getAuditHistory(int playerId) throws Exception {
+		List<AuditHistory> list = new ArrayList<AuditHistory>();
+		
+		Statement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			stmt = conn.createStatement();
+			
+			String sql = "SELECT history.user_id, history.player_id, history.action, history.action_date_time, users.first_name, users.last_name  "
+					+ "FROM audit_history history, users users "
+					+ "WHERE history.user_id=users.id AND history.player_id=" + playerId;
+			rs = stmt.executeQuery(sql);
+			
+			while(rs.next()){
+				int userId = rs.getInt("history.user_id");
+				String action = rs.getString("history.action");
+				Timestamp timestamp = rs.getTimestamp("history.action_date_time");
+				java.util.Date actionDateTime = new java.util.Date(timestamp.getTime());
+				
+				String userFirstName = rs.getString("users.first_name");
+				String userLastName = rs.getString("users.last_name");
+				
+				AuditHistory temp = new AuditHistory(userId, playerId, action, actionDateTime, userFirstName, userLastName);
+				list.add(temp);
+				
+			}
+			return list;
+		}finally{
+			close(stmt, rs);
+		}
+	}
 
-	public void addPlayer(Player thePlayer) throws Exception {
+	public void addPlayer(Player thePlayer, int userId) throws Exception {
 
 		PreparedStatement stmt = null;
 
@@ -67,17 +122,38 @@ public class PlayerDAO {
 			stmt.setBigDecimal(4, thePlayer.getIncome());
 
 			stmt.executeUpdate();
+
+			ResultSet generatedKeys = stmt.getGeneratedKeys();
+			if (generatedKeys.next()) {
+				thePlayer.setId(generatedKeys.getInt(1));
+			} else {
+				throw new SQLException("Error generating key for player");
+			}
+
+			stmt.close();
+			stmt = conn.prepareStatement("insert into audit_history"
+					+ " (user_id, player_id, action, action_date_time)"
+					+ " values (?, ?, ?, ?)");
+
+			stmt.setInt(1, userId);
+			stmt.setInt(2, thePlayer.getId());
+			stmt.setString(3, "Added a new player");
+			stmt.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+		
+			stmt.executeUpdate();
+			
 		} finally {
-			close(null, stmt, null);
+			stmt.close();
 		}
 	}
 
-	public void updatePlayer(Player thePlayer) throws SQLException {
+	public void updatePlayer(Player thePlayer, int userId) throws SQLException {
 
 		PreparedStatement stmt = null;
 
 		try {
-			stmt = conn.prepareStatement("update players"
+			stmt = conn
+					.prepareStatement("update players"
 							+ " set nickname = ?, profession = ?, guildname = ?, income = ?"
 							+ " where id = ?");
 
@@ -88,19 +164,46 @@ public class PlayerDAO {
 			stmt.setInt(5, thePlayer.getId());
 
 			stmt.executeUpdate();
+			stmt.close();
+
+			stmt = conn.prepareStatement("insert into audit_history"
+					+ " (user_id, player_id, action, action_date_time)"
+					+ " values (?, ?, ?, ?)");
+
+			stmt.setInt(1, userId);
+			stmt.setInt(2, thePlayer.getId());
+			stmt.setString(3, "Updated player.");
+			stmt.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+
+			stmt.executeUpdate();
+
 		} finally {
 			close(null, stmt, null);
 		}
 	}
-	
-	public void deletePlayer(int playerId) throws SQLException {
+
+	public void deletePlayer(Player thePlayer, int userId) throws SQLException {
 		PreparedStatement stmt = null;
-		
+
 		try {
-			stmt = conn.prepareStatement("delete from players where id = ?");
-			stmt.setInt(1, playerId);
+			
+			stmt = conn.prepareStatement("insert into audit_history"
+					+ " (user_id, player_id, action, action_date_time)"
+					+ " values (?, ?, ?, ?)");
+
+			stmt.setInt(1, userId);
+			stmt.setInt(2, thePlayer.getId());
+			stmt.setString(3, "Deleted player.");
+			stmt.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+
 			stmt.executeUpdate();
-		}finally{
+			stmt.close();
+			
+			stmt = conn.prepareStatement("delete from players where id = ?");
+			stmt.setInt(1, thePlayer.getId());
+			stmt.executeUpdate();
+			
+		} finally {
 			close(null, stmt, null);
 		}
 	}
@@ -138,6 +241,16 @@ public class PlayerDAO {
 		Player newPlayer = new Player(id, nickName, profession, guildName,
 				income);
 		return newPlayer;
+	}
+	
+	private User convertRowToUser(ResultSet rs) throws SQLException {
+		int id = rs.getInt("id");
+		String firstName = rs.getString("first_name");
+		String lastName = rs.getString("last_name");
+		String email = rs.getString("email");
+		
+		User newUser = new User(id, lastName, firstName, email);
+		return newUser;
 	}
 
 	private static void close(Connection conn, Statement stmt, ResultSet rs)

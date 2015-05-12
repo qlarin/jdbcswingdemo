@@ -37,15 +37,19 @@ public class PlayerDialog extends JDialog {
 	
 	private Player previousPlayer = null;
 	private boolean updateMode = false;
+	
+	private int userId;
 
 	public PlayerDialog(PlayerSearchModule thePlayerSearchModule,
-			PlayerDAO thePlayerDAO, Player thePreviousPlayer, boolean theUpdateMode) {
+			PlayerDAO thePlayerDAO, Player thePreviousPlayer, boolean theUpdateMode, int theUserId) {
 		this();
 		playerDAO = thePlayerDAO;
 		playerSearchModule = thePlayerSearchModule;
 		
 		previousPlayer = thePreviousPlayer;
 		updateMode = theUpdateMode;
+		
+		userId = theUserId;
 		
 		if(updateMode){
 			setTitle("Update player");
@@ -60,8 +64,8 @@ public class PlayerDialog extends JDialog {
 		incomeTextField.setText(thePlayer.getIncome().toString());
 	}
 	
-	public PlayerDialog(PlayerSearchModule thePlayerSearchModule, PlayerDAO thePlayerDAO) {
-		this(thePlayerSearchModule, thePlayerDAO, null, false);
+	public PlayerDialog(PlayerSearchModule thePlayerSearchModule, PlayerDAO thePlayerDAO, int theUserId) {
+		this(thePlayerSearchModule, thePlayerDAO, null, false, theUserId);
 	}
 	
 	/**
@@ -69,7 +73,7 @@ public class PlayerDialog extends JDialog {
 	 */
 	public PlayerDialog() {
 		setTitle("Add new player");
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 600, 300);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -177,9 +181,9 @@ public class PlayerDialog extends JDialog {
 		try {
 			
 			if(updateMode){
-				playerDAO.updatePlayer(newPlayer);
+				playerDAO.updatePlayer(newPlayer, userId);
 			}else{
-				playerDAO.addPlayer(newPlayer);
+				playerDAO.addPlayer(newPlayer, userId);
 			}
 			
 			setVisible(false);
