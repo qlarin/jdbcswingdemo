@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Properties;
 
 import jdbc.swing.domain.Player;
-import jdbc.swing.domain.User;
 import jdbc.swing.domain.AuditHistory;
 
 public class PlayerDAO {
@@ -51,26 +50,7 @@ public class PlayerDAO {
 			}
 			return list;
 		} finally {
-			close(stmt, rs);
-		}
-	}
-	
-	public List<User> getUsers() throws Exception {
-		List<User> list = new ArrayList<User>();
-		Statement stmt = null;
-		ResultSet rs = null;
-		
-		try {
-			stmt = conn.createStatement();
-			rs = stmt.executeQuery("select * from users order by last_name");
-			
-			while(rs.next()){
-				User newUser = convertRowToUser(rs);
-				list.add(newUser);
-			}
-			return list;
-		}finally{
-			close(stmt, rs);
+			DAOUtils.close(stmt, rs);
 		}
 	}
 	
@@ -103,7 +83,7 @@ public class PlayerDAO {
 			}
 			return list;
 		}finally{
-			close(stmt, rs);
+			DAOUtils.close(stmt, rs);
 		}
 	}
 
@@ -114,7 +94,7 @@ public class PlayerDAO {
 		try {
 			stmt = conn.prepareStatement("insert into players"
 					+ " (nickname, profession, guildname, income)"
-					+ " values (?, ?, ?, ?)");
+					+ " values (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
 
 			stmt.setString(1, thePlayer.getNickName());
 			stmt.setString(2, thePlayer.getProfession());
@@ -143,7 +123,7 @@ public class PlayerDAO {
 			stmt.executeUpdate();
 			
 		} finally {
-			stmt.close();
+			DAOUtils.close(stmt);
 		}
 	}
 
@@ -178,7 +158,7 @@ public class PlayerDAO {
 			stmt.executeUpdate();
 
 		} finally {
-			close(null, stmt, null);
+			DAOUtils.close(stmt);
 		}
 	}
 
@@ -204,7 +184,7 @@ public class PlayerDAO {
 			stmt.executeUpdate();
 			
 		} finally {
-			close(null, stmt, null);
+			DAOUtils.close(stmt);
 		}
 	}
 
@@ -227,7 +207,7 @@ public class PlayerDAO {
 			}
 			return list;
 		} finally {
-			close(pstmt, rs);
+			DAOUtils.close(pstmt, rs);
 		}
 	}
 
@@ -241,34 +221,6 @@ public class PlayerDAO {
 		Player newPlayer = new Player(id, nickName, profession, guildName,
 				income);
 		return newPlayer;
-	}
-	
-	private User convertRowToUser(ResultSet rs) throws SQLException {
-		int id = rs.getInt("id");
-		String firstName = rs.getString("first_name");
-		String lastName = rs.getString("last_name");
-		String email = rs.getString("email");
-		
-		User newUser = new User(id, lastName, firstName, email);
-		return newUser;
-	}
-
-	private static void close(Connection conn, Statement stmt, ResultSet rs)
-			throws SQLException {
-
-		if (rs != null) {
-			rs.close();
-		}
-		if (stmt != null) {
-			stmt.close();
-		}
-		if (conn != null) {
-			conn.close();
-		}
-	}
-
-	private void close(Statement stmt, ResultSet rs) throws SQLException {
-		close(null, stmt, rs);
 	}
 
 }

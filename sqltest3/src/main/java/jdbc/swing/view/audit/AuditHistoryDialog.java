@@ -1,4 +1,4 @@
-package jdbc.swing.view;
+package jdbc.swing.view.audit;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -64,7 +64,7 @@ public class AuditHistoryDialog extends JDialog {
 	public AuditHistoryDialog() {
 		setTitle("Audit History");
 		setModal(true);
-		setBounds(100, 100, 651, 300);
+		setBounds(100, 100, 650, 300);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -74,7 +74,7 @@ public class AuditHistoryDialog extends JDialog {
 			contentPanel.add(panel, BorderLayout.NORTH);
 			panel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 5));
 			{
-				JLabel lblAuditHistoryFor = new JLabel("Audit History for employee:");
+				JLabel lblAuditHistoryFor = new JLabel("Audit History for player:");
 				panel.add(lblAuditHistoryFor);
 			}
 			{

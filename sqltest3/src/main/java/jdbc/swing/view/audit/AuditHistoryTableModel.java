@@ -1,4 +1,4 @@
-package jdbc.swing.view;
+package jdbc.swing.view.audit;
 
 import java.util.List;
 

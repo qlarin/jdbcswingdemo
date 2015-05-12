@@ -1,17 +1,20 @@
-package jdbc.swing.view;
+package jdbc.swing.view.user;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.forms.factories.FormFactory;
+
 import javax.swing.JLabel;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
@@ -26,7 +29,9 @@ import java.awt.event.WindowEvent;
 import java.util.List;
 
 import jdbc.swing.dao.PlayerDAO;
+import jdbc.swing.dao.UserDAO;
 import jdbc.swing.domain.User;
+import jdbc.swing.view.PlayerSearchModule;
 
 public class UserLoginDialog extends JDialog {
 
@@ -35,6 +40,11 @@ public class UserLoginDialog extends JDialog {
 	private JComboBox userComboBox;
 	
 	private PlayerDAO playerDAO;
+	private UserDAO userDAO;
+	
+	public void setUserDAO(UserDAO theUserDAO) {
+		userDAO = theUserDAO;
+	}
 	
 	public void setPlayerDAO(PlayerDAO thePlayerDAO){
 		playerDAO = thePlayerDAO;
@@ -50,13 +60,13 @@ public class UserLoginDialog extends JDialog {
 	 */
 	public UserLoginDialog() {
 		addWindowListener(new WindowAdapter() {
-			
-			public void windowClosing(WindowEvent e){
+			@Override
+			public void windowClosing(WindowEvent e) {
 				System.exit(0);
 			}
 		});
 		setTitle("User Login");
-		setBounds(100, 100, 450, 168);
+		setBounds(100, 100, 450, 170);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -94,24 +104,8 @@ public class UserLoginDialog extends JDialog {
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						
-						if (userComboBox.getSelectedIndex() == -1) {						
-							JOptionPane.showMessageDialog(UserLoginDialog.this, "You must select a user.", "Error", JOptionPane.ERROR_MESSAGE);				
-							return;
-						}
-						
-						User theUser = (User) userComboBox.getSelectedItem();
-						int userId = theUser.getId();
-						
-						char[] password = passwordField.getPassword();
-						
-						setVisible(false);
-						dispose();
-						
-						PlayerSearchModule frame = new PlayerSearchModule(userId, playerDAO);
-						frame.setLoggedInUserName(theUser.getFirstName(), theUser.getLastName());
-						
-						frame.setVisible(true);
+					
+						performUserLogin();
 					}
 				});
 				okButton.setActionCommand("OK");
@@ -128,5 +122,43 @@ public class UserLoginDialog extends JDialog {
 
 	public JComboBox getUserComboBox() {
 		return userComboBox;
+	}
+	
+private void performUserLogin() {
+		
+		try {
+			if (userComboBox.getSelectedIndex() == -1) {						
+				JOptionPane.showMessageDialog(UserLoginDialog.this, "You must select a user.", "Error", JOptionPane.ERROR_MESSAGE);				
+				return;
+			}
+
+			User theUser = (User) userComboBox.getSelectedItem();
+			int userId = theUser.getId();
+			boolean admin = theUser.isAdmin();
+			
+			String plainTextPassword = new String(passwordField.getPassword());
+			theUser.setPassword(plainTextPassword);
+
+			boolean isValidPassword = userDAO.authenticate(theUser);
+
+			if (isValidPassword) {
+				setVisible(false);
+
+				PlayerSearchModule frame = new PlayerSearchModule(userId, admin, playerDAO, userDAO);
+				frame.setLoggedInUserName(theUser.getFirstName(), theUser.getLastName());
+
+				frame.setVisible(true);
+			}
+			else {
+				JOptionPane.showMessageDialog(this, "Invalid login", "Invalid Login",
+						JOptionPane.ERROR_MESSAGE);
+
+				return;			
+			}
+		}
+		catch (Exception exc) {
+			JOptionPane.showMessageDialog(this, "Error during login", "Error",
+					JOptionPane.ERROR_MESSAGE);			
+		}
 	}
 }

@@ -1,4 +1,4 @@
-package jdbc.swing.view;
+package jdbc.swing.view.player;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 
 import jdbc.swing.dao.PlayerDAO;
 import jdbc.swing.domain.Player;
+import jdbc.swing.view.PlayerSearchModule;
 
 public class PlayerDialog extends JDialog {
 
