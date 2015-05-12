@@ -10,6 +10,12 @@ public class Player {
 	private String guildName;
 	private BigDecimal income;
 
+	public Player(String nickName, String profession, String guildName,
+			BigDecimal income) {
+		
+		this(0, nickName, profession, guildName, income);
+	}
+	
 	public Player(int id, String nickName, String profession, String guildName,
 			BigDecimal income) {
 

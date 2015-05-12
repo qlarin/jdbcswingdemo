@@ -9,6 +9,7 @@ import jdbc.swing.domain.Player;
 public class PlayerTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
+	public static final int OBJECT_COL = -1;
 	private static final int NICK_NAME_COL = 0;
 	private static final int PROFESSION_COL = 1;
 	private static final int GUILD_NAME_COL = 2;
@@ -46,6 +47,8 @@ public class PlayerTableModel extends AbstractTableModel {
 			return newPlayer.getGuildName();
 		case INCOME_COL:
 			return newPlayer.getIncome();
+		case OBJECT_COL:
+			return newPlayer;
 		default:
 			return newPlayer.getNickName();
 				
