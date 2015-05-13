@@ -21,14 +21,13 @@ public class PlayerDAO {
 	private Connection conn;
 
 	public PlayerDAO() throws Exception {
-
 		Properties props = new Properties();
 		props.load(new FileInputStream("src/main/resources/testdb.properties"));
-
-		String url = props.getProperty("url");
+		
 		String user = props.getProperty("user");
 		String pass = props.getProperty("password");
-
+		String url = props.getProperty("url");
+	
 		conn = DriverManager.getConnection(url, user, pass);
 		System.out.println("Succesfully connected to DB: " + url);
 

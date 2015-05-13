@@ -24,12 +24,10 @@ public class AuditHistoryTableModel extends AbstractTableModel {
 		auditHistoryList = theAuditHistoryList;
 	}
 
-	@Override
 	public int getColumnCount() {
 		return columnNames.length;
 	}
 
-	@Override
 	public int getRowCount() {
 		return auditHistoryList.size();
 	}
@@ -39,7 +37,6 @@ public class AuditHistoryTableModel extends AbstractTableModel {
 		return columnNames[col];
 	}
 
-	@Override
 	public Object getValueAt(int rowIndex, int colIndex) {
 
 		AuditHistory tempAuditHistory = auditHistoryList.get(rowIndex);
